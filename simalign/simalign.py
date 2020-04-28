@@ -11,7 +11,7 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
-from utils import utils
+from simalign.utils import utils
 
 LOG = utils.get_logger(__name__)
 

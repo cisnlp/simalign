@@ -1,8 +1,8 @@
 import regex
 import codecs
 import argparse
-from aligner import *
-from utils import utils
+from simalign import *
+from simalign.utils import utils
 
 LOG = utils.get_logger(__name__)
 
