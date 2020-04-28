@@ -2,9 +2,6 @@ import regex
 import codecs
 import argparse
 from simalign import EmbeddingLoader, SentenceAligner
-import simalign.utils as utils
-
-LOG = utils.get_logger(__name__)
 
 
 def gather_null_aligns(sim_matrix, inter_matrix):
@@ -64,7 +61,7 @@ if __name__ == "__main__":
 		args.model = "tr:xlm-roberta-base"
 	if args.model[3:] not in TR_Models:
 		raise ValueError("The model '{}' is not recognised!".format(args.model))
-	LOG.info(args)
+	print(args)
 
 	langs = [args.L1_path, args.L2_path]
 	max_sent_id = args.num_test_sents
@@ -101,7 +98,7 @@ if __name__ == "__main__":
 
 	corpora_lengths = [len(corpus) for corpus in original_corpora]
 	if min(corpora_lengths) != max(corpora_lengths):
-		LOG.info(corpora_lengths)
+		print(corpora_lengths)
 		raise ValueError('Cannot load parallel corpus.')
 
 	# --------------------------------------------------------
