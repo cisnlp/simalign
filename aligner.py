@@ -36,8 +36,7 @@ class EmbeddingLoader(object):
 			self.emb_model.to(self.device)
 			self.tokenizer = tokenizer_class.from_pretrained(model)
 
-		LOG.info("Initialized the EmbeddingLoader with model:", end=" ")
-		LOG.info(self.model, "\n----------")
+		LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 
 	def get_embed_list(self, sent_pair):
 		if self.model.startswith("tr:"):
