@@ -11,13 +11,13 @@ setup(name='simalign',
       license='GPL-3.0',
       packages=['simalign'],
       install_requires=[
-          "numpy"
-          "torch"
-          "scipy"
-          "transformers == 2.3.0"
-          "regex"
-          "networkx == 2.4"
-          "scikit_learn"
+          "numpy",
+          "torch",
+          "scipy",
+          "transformers == 2.3.0",
+          "regex",
+          "networkx == 2.4",
+          "scikit_learn",
       ],
       python_requires=">=3.6.0",
       zip_safe=False)
