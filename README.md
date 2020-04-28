@@ -3,7 +3,7 @@ SimAlign: Similarity Based Word Aligner
 
 <p align="center">
     <br>
-    <img alt="Alignment Example" src="https://raw.githubusercontent.com/masoudjs/simalign/tree/master/assets/example.png" width="200"/>
+    <img alt="Alignment Example" src="https://raw.githubusercontent.com/pdufter/simalign/master/assets/example.png" width="200"/>
     <br>
 <p>
 
