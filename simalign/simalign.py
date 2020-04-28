@@ -11,9 +11,9 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
-import simalign.utils as utils
+from simalign.utils import get_logger
 
-LOG = utils.get_logger(__name__)
+LOG = get_logger(__name__)
 
 
 class EmbeddingLoader(object):
