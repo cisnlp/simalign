@@ -1,8 +1,8 @@
 import regex
 import codecs
 import argparse
-from simalign import *
-from simalign.utils import utils
+from simalign import EmbeddingLoader, SentenceAligner
+import simalign.utils as utils
 
 LOG = utils.get_logger(__name__)
 
