@@ -1,6 +1,9 @@
 import torch
 import numpy as np
-import networkx as nx
+try:
+	import networkx as nx
+except ImportError:
+	nx = None
 from transformers import *
 from typing import Dict, List, Text, Tuple
 from scipy.stats import entropy
@@ -8,6 +11,9 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
+from simalign.utils import get_logger
+
+LOG = get_logger(__name__)
 
 
 class EmbeddingLoader(object):
@@ -33,13 +39,12 @@ class EmbeddingLoader(object):
 			self.emb_model.to(self.device)
 			self.tokenizer = tokenizer_class.from_pretrained(model)
 
-		print("Initialized the EmbeddingLoader with model:", end=" ")
-		print(self.model, "\n----------")
+		LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 
 	def get_embed_list(self, sent_pair):
 		if self.model.startswith("tr:"):
 			sent_ids = [self.tokenizer.convert_tokens_to_ids(x) for x in sent_pair]
-			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=False, return_tensors='pt')['input_ids'] for sent in sent_ids]
+			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=True, return_tensors='pt')['input_ids'] for sent in sent_ids]
 
 			outputs = [self.emb_model(in_ids.to(self.device)) for in_ids in inputs]
 			# use vectors from layer 8
@@ -67,12 +72,14 @@ class SentenceAligner(object):
 		elif model == "xlmr":
 			self.model = "tr:xlm-roberta-base"
 		if self.model[3:] not in TR_Models:
-			print("The model '{}' is not recognised!".format(model))
+			raise ValueError("The model '{}' is not recognised!".format(model))
 
 		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device)
 
 	@staticmethod
 	def get_max_weight_match(sim: np.ndarray) -> np.ndarray:
+		if nx is None:
+			raise ValueError("networkx must be installed to use match algorithm.")
 		def permute(edge):
 			if edge[0] < sim.shape[0]:
 				return edge[0], edge[1] - sim.shape[0]

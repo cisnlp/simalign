@@ -1,7 +1,7 @@
 import regex
 import codecs
 import argparse
-from aligner import *
+from simalign import EmbeddingLoader, SentenceAligner
 
 
 def gather_null_aligns(sim_matrix, inter_matrix):
@@ -60,8 +60,7 @@ if __name__ == "__main__":
 	elif args.model == "xlmr":
 		args.model = "tr:xlm-roberta-base"
 	if args.model[3:] not in TR_Models:
-		print("The model '{}' is not recognised!".format(args.model))
-		exit()
+		raise ValueError("The model '{}' is not recognised!".format(args.model))
 	print(args)
 
 	langs = [args.L1_path, args.L2_path]
