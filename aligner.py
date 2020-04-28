@@ -8,6 +8,9 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
 from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
+from utils import utils
+
+LOG = utils.get_logger(__name__)
 
 
 class EmbeddingLoader(object):
@@ -33,8 +36,8 @@ class EmbeddingLoader(object):
 			self.emb_model.to(self.device)
 			self.tokenizer = tokenizer_class.from_pretrained(model)
 
-		print("Initialized the EmbeddingLoader with model:", end=" ")
-		print(self.model, "\n----------")
+		LOG.info("Initialized the EmbeddingLoader with model:", end=" ")
+		LOG.info(self.model, "\n----------")
 
 	def get_embed_list(self, sent_pair):
 		if self.model.startswith("tr:"):
@@ -67,7 +70,7 @@ class SentenceAligner(object):
 		elif model == "xlmr":
 			self.model = "tr:xlm-roberta-base"
 		if self.model[3:] not in TR_Models:
-			print("The model '{}' is not recognised!".format(model))
+			raise ValueError("The model '{}' is not recognised!".format(model))
 
 		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device)
 
