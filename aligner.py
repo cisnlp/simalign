@@ -1,6 +1,9 @@
 import torch
 import numpy as np
-import networkx as nx
+try:
+	import networkx as nx
+except ImportError:
+	nx = None
 from transformers import *
 from typing import Dict, List, Text, Tuple
 from scipy.stats import entropy
@@ -75,6 +78,8 @@ class SentenceAligner(object):
 
 	@staticmethod
 	def get_max_weight_match(sim: np.ndarray) -> np.ndarray:
+		if nx is None:
+			raise ValueError("networkx must be installed to use match algorithm.")
 		def permute(edge):
 			if edge[0] < sim.shape[0]:
 				return edge[0], edge[1] - sim.shape[0]
