@@ -39,7 +39,7 @@ class EmbeddingLoader(object):
 	def get_embed_list(self, sent_pair):
 		if self.model.startswith("tr:"):
 			sent_ids = [self.tokenizer.convert_tokens_to_ids(x) for x in sent_pair]
-			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=False, return_tensors='pt')['input_ids'] for sent in sent_ids]
+			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=True, return_tensors='pt')['input_ids'] for sent in sent_ids]
 
 			outputs = [self.emb_model(in_ids.to(self.device)) for in_ids in inputs]
 			# use vectors from layer 8
