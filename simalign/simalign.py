@@ -1,3 +1,6 @@
+# coding=utf-8
+
+import logging
 import torch
 import numpy as np
 try:
@@ -17,7 +20,7 @@ LOG = get_logger(__name__)
 
 
 class EmbeddingLoader(object):
-	def __init__(self, model="bert", device=torch.device('cpu')):
+	def __init__(self, model="bert-base-multilingual-cased", device=torch.device('cpu')):
 		TR_Models = {
 			'bert-base-uncased': (BertModel, BertTokenizer),
 			'bert-base-multilingual-cased': (BertModel, BertTokenizer),
@@ -30,19 +33,21 @@ class EmbeddingLoader(object):
 
 		self.model = model
 		self.device = device
+		self.emb_model = None
+		self.tokenizer = None
 
-		if model.startswith("tr:"):
-			model = model[3:]
+		if model in TR_Models:
 			model_class, tokenizer_class = TR_Models[model]
 			self.emb_model = model_class.from_pretrained(model, output_hidden_states=True)
 			self.emb_model.eval()
 			self.emb_model.to(self.device)
 			self.tokenizer = tokenizer_class.from_pretrained(model)
-
-		LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
+			LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
+		else:
+			raise ValueError("The model '{}' is not recognised!".format(model))
 
 	def get_embed_list(self, sent_pair):
-		if self.model.startswith("tr:"):
+		if self.emb_model is not None:
 			sent_ids = [self.tokenizer.convert_tokens_to_ids(x) for x in sent_pair]
 			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=True, return_tensors='pt')['input_ids'] for sent in sent_ids]
 
@@ -57,7 +62,7 @@ class EmbeddingLoader(object):
 class SentenceAligner(object):
 	def __init__(self, model: str = "bert", token_type: str = "bpe", distortion: float = 0.0, matching_methods: str = "mai", device: str = "cpu"):
 		TR_Models = [
-			'bert-base-uncased', 'bert-base-multilingual-cased', 'bert-base-multilingual-uncased', 
+			'bert-base-uncased', 'bert-base-multilingual-cased', 'bert-base-multilingual-uncased',
 			'xlm-mlm-100-1280', 'roberta-base', 'xlm-roberta-base', 'xlm-roberta-large']
 		all_matching_methods = {"a": "inter", "m": "mwmf", "i": "itermax", "f": "fwd", "r": "rev"}
 
@@ -68,10 +73,10 @@ class SentenceAligner(object):
 		self.device = torch.device(device)
 
 		if model == "bert":
-			self.model = "tr:bert-base-multilingual-cased"
+			self.model = "bert-base-multilingual-cased"
 		elif model == "xlmr":
-			self.model = "tr:xlm-roberta-base"
-		if self.model[3:] not in TR_Models:
+			self.model = "xlm-roberta-base"
+		if self.model not in TR_Models:
 			raise ValueError("The model '{}' is not recognised!".format(model))
 
 		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device)
@@ -118,7 +123,8 @@ class SentenceAligner(object):
 		return np.multiply(sim_matrix, distortion_mask)
 
 	@staticmethod
-	def iter_max(sim_matrix: np.ndarray, max_count: int=3) -> np.ndarray:
+	def iter_max(sim_matrix: np.ndarray, max_count: int=2) -> np.ndarray:
+		alpha_ratio = 0.9
 		m, n = sim_matrix.shape
 		forward = np.eye(n)[sim_matrix.argmax(axis=1)]  # m x n
 		backward = np.eye(m)[sim_matrix.argmax(axis=0)]  # n x m
@@ -128,14 +134,11 @@ class SentenceAligner(object):
 			return inter
 
 		new_inter = np.zeros((m, n))
-		count = 0
-		while count <= max_count:
-			inter = inter + new_inter
-
-			ratio = 0.9
+		count = 1
+		while count < max_count:
 			mask_x = 1.0 - np.tile(inter.sum(1)[:, np.newaxis], (1, n)).clip(0.0, 1.0)
 			mask_y = 1.0 - np.tile(inter.sum(0)[np.newaxis, :], (m, 1)).clip(0.0, 1.0)
-			mask = ((ratio * mask_x) + (ratio * mask_y)).clip(0.0, 1.0)
+			mask = ((alpha_ratio * mask_x) + (alpha_ratio * mask_y)).clip(0.0, 1.0)
 			mask_zeros = 1.0 - ((1.0 - mask_x) * (1.0 - mask_y))
 			if mask_x.sum() < 1.0 or mask_y.sum() < 1.0:
 				mask *= 0.0
@@ -148,12 +151,13 @@ class SentenceAligner(object):
 
 			if np.array_equal(inter + new_inter, inter):
 				break
+			inter = inter + new_inter
 			count += 1
 		return inter
 
-	def get_word_aligns(self, sent_pair) -> Dict[str, List]:
-		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in sent_pair[0]]
-		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in sent_pair[1]]
+	def get_word_aligns(self, src_sent: List, trg_sent: List) -> Dict[str, List]:
+		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in src_sent]
+		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in trg_sent]
 		bpe_lists = [[bpe for w in sent for bpe in w] for sent in [l1_tokens, l2_tokens]]
 
 		if self.token_type == "bpe":
@@ -196,7 +200,7 @@ class SentenceAligner(object):
 		all_mats["fwd"], all_mats["rev"] = self.get_alignment_matrix(sim)
 		all_mats["inter"] = all_mats["fwd"] * all_mats["rev"]
 		all_mats["mwmf"] = self.get_max_weight_match(sim)
-		all_mats["itermax"] = self.iter_max(sim, 1)
+		all_mats["itermax"] = self.iter_max(sim)
 
 		aligns = {x: set() for x in self.matching_methods}
 		for i in range(len(vectors[0])):
@@ -204,9 +208,9 @@ class SentenceAligner(object):
 				for ext in self.matching_methods:
 					if all_mats[ext][i, j] > 0:
 						if self.token_type == "bpe":
-							aligns[ext].add('{}-{}'.format(l1_b2w_map[i], l2_b2w_map[j]))
+							aligns[ext].add((l1_b2w_map[i], l2_b2w_map[j]))
 						else:
-							aligns[ext].add('{}-{}'.format(i, j))
+							aligns[ext].add((i, j))
 		for ext in aligns:
 			aligns[ext] = sorted(aligns[ext])
 		return aligns
