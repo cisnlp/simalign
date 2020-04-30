@@ -1,7 +1,9 @@
+# coding=utf-8
+
 import regex
 import codecs
 import argparse
-from simalign import EmbeddingLoader, SentenceAligner
+from simalign.simalign import *
 
 
 def gather_null_aligns(sim_matrix, inter_matrix):
@@ -39,14 +41,14 @@ def apply_percentile_null_aligns(sim_matrix, ratio=1.0):
 # --------------------------------------------------------
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="Extracts alignments based on different embeddings", epilog="example: python3 main.py path/to/L1/text path/to/L2/text [options]")
-	parser.add_argument("L1_path", type=str)
-	parser.add_argument("L2_path", type=str)
+	parser.add_argument("L1_path", type=str, help="Lines in the file should be indexed separated by TABs.")
+	parser.add_argument("L2_path", type=str, help="Same format as L1 file.")
 	parser.add_argument("-model", type=str, default="bert", help="choices: ['bert', 'xlmr', 'tr:<transformer_model_name>']")
 	parser.add_argument("-distortion", type=float, default=0.0)
 	parser.add_argument("--null-align", type=float, default=1.0)
 	parser.add_argument("--token-type", type=str, choices=["bpe", "word"], default="bpe")
 	parser.add_argument("--matching-methods", type=str, default="mai", help="m: Max Weight Matching (mwmf), a: argmax (inter), i: itermax, f: forward (fwd), r: reverse (rev)")
-	parser.add_argument("--num-test-sents", type=int, default=-1, help="-1 means all sentences")
+	parser.add_argument("--num-test-sents", type=int, default=None, help="-1 means all sentences")
 	parser.add_argument("-log", action="store_true")
 	parser.add_argument("-device", type=str, default="cpu")
 	parser.add_argument("-output", type=str, default="align_out", help="output alignment files (without extension)")
@@ -60,8 +62,11 @@ if __name__ == "__main__":
 	elif args.model == "xlmr":
 		args.model = "tr:xlm-roberta-base"
 	if args.model[3:] not in TR_Models:
-		raise ValueError("The model '{}' is not recognised!".format(args.model))
-	print(args)
+		LOG.warning("The model '{}' is not recognised!".format(args.model))
+		LOG.warning("using the default model.")
+		args.model = "tr:bert-base-multilingual-cased"
+
+	LOG.info("Simalign parameters: " + str(args))
 
 	langs = [args.L1_path, args.L2_path]
 	max_sent_id = args.num_test_sents
@@ -69,7 +74,7 @@ if __name__ == "__main__":
 	device = torch.device(args.device)
 
 	# --------------------------------------------------------
-	embed_loader = EmbeddingLoader(model=args.model, device=device)
+	embed_loader = EmbeddingLoader(model=args.model[3:], device=device)
 
 	original_paths = [lang for lang in langs]
 	original_corpora = []
@@ -98,7 +103,7 @@ if __name__ == "__main__":
 
 	corpora_lengths = [len(corpus) for corpus in original_corpora]
 	if min(corpora_lengths) != max(corpora_lengths):
-		print(corpora_lengths)
+		LOG.warning("Mismatch in corpus lengths: " + str(corpora_lengths))
 		raise ValueError('Cannot load parallel corpus.')
 
 	# --------------------------------------------------------
@@ -148,7 +153,7 @@ if __name__ == "__main__":
 			methods_matrix["forward"], methods_matrix["backward"] = SentenceAligner.get_alignment_matrix(sim)
 			methods_matrix["inter"] = methods_matrix["forward"] * methods_matrix["backward"]
 			methods_matrix["mwmf"] = SentenceAligner.get_max_weight_match(sim)
-			methods_matrix["itermax"] = SentenceAligner.iter_max(sim, 1)
+			methods_matrix["itermax"] = SentenceAligner.iter_max(sim)
 
 			for m in entropies:
 				entropies[m] += gather_null_aligns(sim, methods_matrix[m])
@@ -199,7 +204,7 @@ if __name__ == "__main__":
 		all_mats["fwd"], all_mats["rev"] = SentenceAligner.get_alignment_matrix(sim)
 		all_mats["inter"] = all_mats["fwd"] * all_mats["rev"]
 		all_mats["mwmf"] = SentenceAligner.get_max_weight_match(sim)
-		all_mats["itermax"] = SentenceAligner.iter_max(sim, 1)
+		all_mats["itermax"] = SentenceAligner.iter_max(sim)
 
 		if args.null_align < 1.0:
 			all_mats["inter"] = np.multiply(all_mats["inter"], mask_nulls["inter"])
