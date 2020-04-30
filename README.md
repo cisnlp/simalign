@@ -3,7 +3,7 @@ SimAlign: Similarity Based Word Aligner
 
 <p align="center">
     <br>
-    <img alt="Alignment Example" src="https://raw.githubusercontent.com/pdufter/simalign/master/assets/example.png" width="300"/>
+    <img alt="Alignment Example" src="https://raw.githubusercontent.com/cisnlp/simalign/master/assets/example.png" width="300"/>
     <br>
 <p>
 
@@ -24,9 +24,7 @@ Download the repo for use or alternatively install with pip
 `pip install --upgrade git+https://github.com/pdufter/simalign.git#egg=simalign`:
 
 
-For an example how to use our code see `example/align_example.py`.
-
-An example for using the SentenceAligner:
+An example for using our code:
 ```python
 from simalign import SentenceAligner
 
@@ -50,6 +48,7 @@ for matching_method in alignments:
 # inter : [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
 # itermax : [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
 ```
+For more examples of how to use our code see `example/align_example.py`.
 
 Demo
 --------
