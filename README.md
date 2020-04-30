@@ -3,7 +3,7 @@ SimAlign: Similarity Based Word Aligner
 
 <p align="center">
     <br>
-    <img alt="Alignment Example" src="https://raw.githubusercontent.com/pdufter/simalign/master/assets/example.png" width="200"/>
+    <img alt="Alignment Example" src="https://raw.githubusercontent.com/pdufter/simalign/master/assets/example.png" width="300"/>
     <br>
 <p>
 
@@ -54,7 +54,7 @@ for matching_method in alignments:
 Demo
 --------
 
-An online demo is available [here](http://simalign.cis.lmu.de/).
+An online demo is available [here](https://simalign.cis.lmu.de/).
 
 
 Publication
@@ -83,7 +83,6 @@ FAQ
 ##### Do I need parallel data to train the system?
 
 No, no parallal training data is required.
-
 
 ##### Which languages can be aligned?
 
