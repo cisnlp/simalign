@@ -5,6 +5,7 @@ import torch
 import numpy as np
 try:
 	import networkx as nx
+	from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
 except ImportError:
 	nx = None
 from transformers import *
@@ -13,7 +14,6 @@ from scipy.stats import entropy
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import normalize
 from sklearn.metrics.pairwise import cosine_similarity
-from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
 from simalign.utils import get_logger
 
 LOG = get_logger(__name__)
