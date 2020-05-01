@@ -21,7 +21,7 @@ For installation of transformers see [their repo](https://github.com/huggingface
 
 Download the repo for use or alternatively install with pip
 
-`pip install --upgrade git+https://github.com/pdufter/simalign.git#egg=simalign`:
+`pip install --upgrade git+https://github.com/cisnlp/simalign.git#egg=simalign`
 
 
 An example for using our code:
