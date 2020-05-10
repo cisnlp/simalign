@@ -45,7 +45,7 @@ class EmbeddingLoader(object):
 			self.tokenizer = tokenizer_class.from_pretrained(model)
 			LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 		else:
-			if os.isdir(model):
+			if os.path.isdir(model):
 				# try to load model with auto-classes
 				self.emb_model = AutoModel.from_pretrained(model, output_hidden_states=True)
 				self.emb_model.eval()
