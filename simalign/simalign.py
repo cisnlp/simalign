@@ -47,7 +47,8 @@ class EmbeddingLoader(object):
 		else:
 			if os.path.isdir(model):
 				# try to load model with auto-classes
-				self.emb_model = AutoModel.from_pretrained(model, output_hidden_states=True)
+				config = AutoConfig.from_pretrained(model, output_hidden_states=True)
+				self.emb_model = AutoModel.from_pretrained(model, config=config)
 				self.emb_model.eval()
 				self.emb_model.to(self.device)
 				self.tokenizer = AutoTokenizer.from_pretrained(model)
