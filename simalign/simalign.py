@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import os
 import logging
 import torch
 import numpy as np
@@ -44,7 +45,15 @@ class EmbeddingLoader(object):
 			self.tokenizer = tokenizer_class.from_pretrained(model)
 			LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 		else:
-			raise ValueError("The model '{}' is not recognised!".format(model))
+			if os.isdir(model):
+				# try to load model with auto-classes
+				self.emb_model = AutoModel.from_pretrained(model, output_hidden_states=True)
+				self.emb_model.eval()
+				self.emb_model.to(self.device)
+				self.tokenizer = AutoTokenizer.from_pretrained(model)
+				LOG.info("Initialized the EmbeddingLoader from path: {}".format(self.model))
+			else:
+				raise ValueError("The model '{}' is not recognised!".format(model))
 
 	def get_embed_list(self, sent_pair):
 		if self.emb_model is not None:
@@ -72,12 +81,11 @@ class SentenceAligner(object):
 		self.matching_methods = [all_matching_methods[m] for m in matching_methods]
 		self.device = torch.device(device)
 
+		# add some shortcuts
 		if model == "bert":
 			self.model = "bert-base-multilingual-cased"
 		elif model == "xlmr":
 			self.model = "xlm-roberta-base"
-		if self.model not in TR_Models:
-			raise ValueError("The model '{}' is not recognised!".format(model))
 
 		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device)
 
