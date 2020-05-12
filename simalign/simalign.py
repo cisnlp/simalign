@@ -21,7 +21,7 @@ LOG = get_logger(__name__)
 
 
 class EmbeddingLoader(object):
-	def __init__(self, model="bert-base-multilingual-cased", device=torch.device('cpu')):
+	def __init__(self, model="bert-base-multilingual-cased", device=torch.device('cpu'), layer=8):
 		TR_Models = {
 			'bert-base-uncased': (BertModel, BertTokenizer),
 			'bert-base-multilingual-cased': (BertModel, BertTokenizer),
@@ -34,6 +34,7 @@ class EmbeddingLoader(object):
 
 		self.model = model
 		self.device = device
+		self.layer = layer
 		self.emb_model = None
 		self.tokenizer = None
 
@@ -63,7 +64,7 @@ class EmbeddingLoader(object):
 
 			outputs = [self.emb_model(in_ids.to(self.device)) for in_ids in inputs]
 			# use vectors from layer 8
-			vectors = [x[2][8].cpu().detach().numpy()[0][1:-1] for x in outputs]
+			vectors = [x[2][self.layer].cpu().detach().numpy()[0][1:-1] for x in outputs]
 			return vectors
 		else:
 			return None
