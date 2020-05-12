@@ -71,7 +71,7 @@ class EmbeddingLoader(object):
 
 
 class SentenceAligner(object):
-	def __init__(self, model: str = "bert", token_type: str = "bpe", distortion: float = 0.0, matching_methods: str = "mai", device: str = "cpu"):
+	def __init__(self, model: str = "bert", token_type: str = "bpe", distortion: float = 0.0, matching_methods: str = "mai", device: str = "cpu", layer: int = 8):
 		TR_Models = [
 			'bert-base-uncased', 'bert-base-multilingual-cased', 'bert-base-multilingual-uncased',
 			'xlm-mlm-100-1280', 'roberta-base', 'xlm-roberta-base', 'xlm-roberta-large']
@@ -89,7 +89,7 @@ class SentenceAligner(object):
 		elif model == "xlmr":
 			self.model = "xlm-roberta-base"
 
-		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device)
+		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device, layer=layer)
 
 	@staticmethod
 	def get_max_weight_match(sim: np.ndarray) -> np.ndarray:
