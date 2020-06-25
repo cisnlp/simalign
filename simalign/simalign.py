@@ -120,6 +120,12 @@ class SentenceAligner(object):
 		backward = np.eye(m)[sim_matrix.argmax(axis=0)]  # n x m
 		return forward, backward.transpose()
 
+	def get_alignment_score(self, X: np.ndarray, Y: np.ndarray) -> float:
+		sim_matrix = self.get_similarity(X, Y)
+		sim_matrix = self.apply_distortion(sim_matrix, self.distortion)
+		forward = sim_matrix.max(axis=1)  # m x n
+		return np.mean(forward)
+
 	@staticmethod
 	def apply_distortion(sim_matrix: np.ndarray, ratio: float = 0.5) -> np.ndarray:
 		shape = sim_matrix.shape
@@ -129,7 +135,7 @@ class SentenceAligner(object):
 		pos_x = np.array([[y / float(shape[1] - 1) for y in range(shape[1])] for x in range(shape[0])])
 		pos_y = np.array([[x / float(shape[0] - 1) for x in range(shape[0])] for y in range(shape[1])])
 		distortion_mask = 1.0 - ((pos_x - np.transpose(pos_y)) ** 2) * ratio
-
+		print(distortion_mask)
 		return np.multiply(sim_matrix, distortion_mask)
 
 	@staticmethod
@@ -165,18 +171,10 @@ class SentenceAligner(object):
 			count += 1
 		return inter
 
-	def get_word_aligns(self, src_sent: List, trg_sent: List) -> Dict[str, List]:
+	def get_word_vectors(self, src_sent: List, trg_sent: List):
 		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in src_sent]
 		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in trg_sent]
 		bpe_lists = [[bpe for w in sent for bpe in w] for sent in [l1_tokens, l2_tokens]]
-
-		if self.token_type == "bpe":
-			l1_b2w_map = []
-			for i, wlist in enumerate(l1_tokens):
-				l1_b2w_map += [i for x in wlist]
-			l2_b2w_map = []
-			for i, wlist in enumerate(l2_tokens):
-				l2_b2w_map += [i for x in wlist]
 
 		vectors = self.embed_loader.get_embed_list(list(bpe_lists))
 		if self.token_type == "word":
@@ -203,11 +201,28 @@ class SentenceAligner(object):
 				new_vectors.append(np.array(w_vector))
 			vectors = np.array(new_vectors)
 
+		return vectors[0], vectors[1]
+
+
+	def get_word_aligns(self, src_sent: List, trg_sent: List) -> Dict[str, List]:
+		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in src_sent]
+		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in trg_sent]
+
+		if self.token_type == "bpe":
+			l1_b2w_map = []
+			for i, wlist in enumerate(l1_tokens):
+				l1_b2w_map += [i for x in wlist]
+			l2_b2w_map = []
+			for i, wlist in enumerate(l2_tokens):
+				l2_b2w_map += [i for x in wlist]
+
+		vectors = self.get_word_vectors(src_sent, trg_sent)
 		all_mats = {}
 		sim = self.get_similarity(vectors[0], vectors[1])
 		sim = self.apply_distortion(sim, self.distortion)
-
 		all_mats["fwd"], all_mats["rev"] = self.get_alignment_matrix(sim)
+		forward = np.mean(sim.max(axis=1))  # m x n
+		backward = np.mean(sim.max(axis=0))
 		all_mats["inter"] = all_mats["fwd"] * all_mats["rev"]
 		all_mats["mwmf"] = self.get_max_weight_match(sim)
 		all_mats["itermax"] = self.iter_max(sim)
