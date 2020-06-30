@@ -124,7 +124,8 @@ class SentenceAligner(object):
 		sim_matrix = self.get_similarity(X, Y)
 		sim_matrix = self.apply_distortion(sim_matrix, self.distortion)
 		forward = sim_matrix.max(axis=1)  # m x n
-		return np.mean(forward)
+		backward = sim_matrix.max(axis=0)  # n x m
+		return (np.mean(forward), np.mean(backward))
 
 	@staticmethod
 	def apply_distortion(sim_matrix: np.ndarray, ratio: float = 0.5) -> np.ndarray:
