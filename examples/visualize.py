@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import List, Text
+from typing import List, Text, Tuple
 
 
 def line2matrix(line: Text, n: int, m: int) -> Tuple[np.ndarray, np.ndarray]:
