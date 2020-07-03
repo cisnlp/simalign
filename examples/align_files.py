@@ -207,9 +207,12 @@ if __name__ == "__main__":
 		all_mats["itermax"] = SentenceAligner.iter_max(sim)
 
 		if args.null_align < 1.0:
-			all_mats["inter"] = np.multiply(all_mats["inter"], mask_nulls["inter"])
-			all_mats["mwmf"] = np.multiply(all_mats["mwmf"], mask_nulls["mwmf"])
-			all_mats["itermax"] = np.multiply(all_mats["itermax"], mask_nulls["itermax"])
+			if "inter" in matching_methods:
+				all_mats["inter"] = np.multiply(all_mats["inter"], mask_nulls["inter"])
+			if "mwmf" in matching_methods:
+				all_mats["mwmf"] = np.multiply(all_mats["mwmf"], mask_nulls["mwmf"])
+			if "itermax" in matching_methods:
+				all_mats["itermax"] = np.multiply(all_mats["itermax"], mask_nulls["itermax"])
 
 		raw_aligns = {x: [] for x in matching_methods}
 		b2w_aligns = {x: set() for x in matching_methods}
