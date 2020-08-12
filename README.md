@@ -81,11 +81,11 @@ FAQ
 
 ##### Do I need parallel data to train the system?
 
-No, no parallal training data is required.
+No, no parallel training data is required.
 
 ##### Which languages can be aligned?
 
-This depends on the underlying pretrained multilingual language model used. For example, if mBERT is used, it covers 104 language
+This depends on the underlying pretrained multilingual language model used. For example, if mBERT is used, it covers 104 languages.
 
 ##### Do I need GPUs for running this?
 
