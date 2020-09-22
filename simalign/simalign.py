@@ -2,19 +2,23 @@
 
 import os
 import logging
-import torch
+from typing import Dict, List, Text, Tuple, Union
+
 import numpy as np
+from scipy.stats import entropy
+from scipy.sparse import csr_matrix
+from sklearn.preprocessing import normalize
+from sklearn.metrics.pairwise import cosine_similarity
 try:
 	import networkx as nx
 	from networkx.algorithms.bipartite.matrix import from_biadjacency_matrix
 except ImportError:
 	nx = None
+import torch
+import torch.nn.functional as F
 from transformers import *
-from typing import Dict, List, Text, Tuple
-from scipy.stats import entropy
-from scipy.sparse import csr_matrix
-from sklearn.preprocessing import normalize
-from sklearn.metrics.pairwise import cosine_similarity
+from transformers import __version__ as Transformers_Version
+
 from simalign.utils import get_logger
 
 LOG = get_logger(__name__)
@@ -59,12 +63,10 @@ class EmbeddingLoader(object):
 
 	def get_embed_list(self, sent_pair):
 		if self.emb_model is not None:
-			sent_ids = [self.tokenizer.convert_tokens_to_ids(x) for x in sent_pair]
-			inputs = [self.tokenizer.prepare_for_model(sent, return_token_type_ids=True, return_tensors='pt')['input_ids'] for sent in sent_ids]
+			inputs = self.tokenizer(sent_pair, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
+			outputs = self.emb_model(**inputs)[2][self.layer]
 
-			outputs = [self.emb_model(in_ids.to(self.device)) for in_ids in inputs]
-			# use vectors from layer 8
-			vectors = [x[2][self.layer].cpu().detach().numpy()[0][1:-1] for x in outputs]
+			vectors = F.normalize(outputs[:, 1:-1, :], dim=2)
 			return vectors
 		else:
 			return None
@@ -165,10 +167,15 @@ class SentenceAligner(object):
 			count += 1
 		return inter
 
-	def get_word_aligns(self, src_sent: List, trg_sent: List) -> Dict[str, List]:
+	def get_word_aligns(self, src_sent: Union[str, List[str]], trg_sent: Union[str, List[str]]) -> Dict[str, List]:
+		if isinstance(src_sent, str):
+			src_sent = src_sent.split()
+		if isinstance(trg_sent, str):
+			trg_sent = trg_sent.split()
 		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in src_sent]
 		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in trg_sent]
 		bpe_lists = [[bpe for w in sent for bpe in w] for sent in [l1_tokens, l2_tokens]]
+		word_lists = [[w for w in sent] for sent in [src_sent, trg_sent]]
 
 		if self.token_type == "bpe":
 			l1_b2w_map = []
@@ -178,7 +185,7 @@ class SentenceAligner(object):
 			for i, wlist in enumerate(l2_tokens):
 				l2_b2w_map += [i for x in wlist]
 
-		vectors = self.embed_loader.get_embed_list(list(bpe_lists))
+		vectors = self.embed_loader.get_embed_list(list(word_lists)).cpu().detach().numpy()
 		if self.token_type == "word":
 			w2b_map = []
 			cnt = 0
@@ -204,7 +211,7 @@ class SentenceAligner(object):
 			vectors = np.array(new_vectors)
 
 		all_mats = {}
-		sim = self.get_similarity(vectors[0], vectors[1])
+		sim = self.get_similarity(vectors[0, :len(bpe_lists[0])], vectors[1, :len(bpe_lists[1])])
 		sim = self.apply_distortion(sim, self.distortion)
 
 		all_mats["fwd"], all_mats["rev"] = self.get_alignment_matrix(sim)
@@ -213,8 +220,8 @@ class SentenceAligner(object):
 		all_mats["itermax"] = self.iter_max(sim)
 
 		aligns = {x: set() for x in self.matching_methods}
-		for i in range(len(vectors[0])):
-			for j in range(len(vectors[1])):
+		for i in range(len(bpe_lists[0])):
+			for j in range(len(bpe_lists[1])):
 				for ext in self.matching_methods:
 					if all_mats[ext][i, j] > 0:
 						if self.token_type == "bpe":
