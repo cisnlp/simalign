@@ -17,7 +17,6 @@ except ImportError:
 import torch
 import torch.nn.functional as F
 from transformers import *
-from transformers import __version__ as Transformers_Version
 
 from simalign.utils import get_logger
 
