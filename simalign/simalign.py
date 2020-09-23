@@ -2,7 +2,7 @@
 
 import os
 import logging
-from typing import Dict, List, Text, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from scipy.stats import entropy
@@ -17,7 +17,6 @@ except ImportError:
 import torch
 import torch.nn.functional as F
 from transformers import *
-from transformers import __version__ as Transformers_Version
 
 from simalign.utils import get_logger
 
@@ -25,7 +24,7 @@ LOG = get_logger(__name__)
 
 
 class EmbeddingLoader(object):
-	def __init__(self, model="bert-base-multilingual-cased", device=torch.device('cpu'), layer=8):
+	def __init__(self, model: str="bert-base-multilingual-cased", device=torch.device('cpu'), layer: int=8):
 		TR_Models = {
 			'bert-base-uncased': (BertModel, BertTokenizer),
 			'bert-base-multilingual-cased': (BertModel, BertTokenizer),
@@ -61,7 +60,7 @@ class EmbeddingLoader(object):
 			else:
 				raise ValueError("The model '{}' is not recognised!".format(model))
 
-	def get_embed_list(self, sent_pair):
+	def get_embed_list(self, sent_pair: List[List[str]]):
 		if self.emb_model is not None:
 			inputs = self.tokenizer(sent_pair, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
 			outputs = self.emb_model(**inputs)[2][self.layer]
@@ -175,7 +174,6 @@ class SentenceAligner(object):
 		l1_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in src_sent]
 		l2_tokens = [self.embed_loader.tokenizer.tokenize(word) for word in trg_sent]
 		bpe_lists = [[bpe for w in sent for bpe in w] for sent in [l1_tokens, l2_tokens]]
-		word_lists = [[w for w in sent] for sent in [src_sent, trg_sent]]
 
 		if self.token_type == "bpe":
 			l1_b2w_map = []
@@ -185,7 +183,7 @@ class SentenceAligner(object):
 			for i, wlist in enumerate(l2_tokens):
 				l2_b2w_map += [i for x in wlist]
 
-		vectors = self.embed_loader.get_embed_list(list(word_lists)).cpu().detach().numpy()
+		vectors = self.embed_loader.get_embed_list([src_sent, trg_sent]).cpu().detach().numpy()
 		if self.token_type == "word":
 			w2b_map = []
 			cnt = 0
