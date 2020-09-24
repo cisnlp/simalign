@@ -15,7 +15,6 @@ try:
 except ImportError:
 	nx = None
 import torch
-import torch.nn.functional as F
 from transformers import *
 
 from simalign.utils import get_logger
@@ -60,35 +59,31 @@ class EmbeddingLoader(object):
 			else:
 				raise ValueError("The model '{}' is not recognised!".format(model))
 
-	def get_embed_list(self, sent_pair: List[List[str]]):
+	def get_embed_list(self, sent_pair: List[List[str]]) -> torch.Tensor:
 		if self.emb_model is not None:
 			inputs = self.tokenizer(sent_pair, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
 			outputs = self.emb_model(**inputs)[2][self.layer]
 
-			vectors = F.normalize(outputs[:, 1:-1, :], dim=2)
-			return vectors
+			return outputs[:, 1:-1, :]
 		else:
 			return None
 
 
 class SentenceAligner(object):
 	def __init__(self, model: str = "bert", token_type: str = "bpe", distortion: float = 0.0, matching_methods: str = "mai", device: str = "cpu", layer: int = 8):
-		TR_Models = [
-			'bert-base-uncased', 'bert-base-multilingual-cased', 'bert-base-multilingual-uncased',
-			'xlm-mlm-100-1280', 'roberta-base', 'xlm-roberta-base', 'xlm-roberta-large']
+		model_names = {
+			"bert": "bert-base-multilingual-cased",
+			"xlmr": "xlm-roberta-base"
+			}
 		all_matching_methods = {"a": "inter", "m": "mwmf", "i": "itermax", "f": "fwd", "r": "rev"}
 
 		self.model = model
+		if model in model_names:
+			self.model = model_names[model]
 		self.token_type = token_type
 		self.distortion = distortion
 		self.matching_methods = [all_matching_methods[m] for m in matching_methods]
 		self.device = torch.device(device)
-
-		# add some shortcuts
-		if model == "bert":
-			self.model = "bert-base-multilingual-cased"
-		elif model == "xlmr":
-			self.model = "xlm-roberta-base"
 
 		self.embed_loader = EmbeddingLoader(model=self.model, device=self.device, layer=layer)
 
