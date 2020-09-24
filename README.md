@@ -56,6 +56,22 @@ Demo
 An online demo is available [here](https://simalign.cis.lmu.de/).
 
 
+Gold Standards
+--------
+Links to the gold standars used in the paper are here: 
+
+
+| Language Pair  | Citation | Type |Link |
+| ------------- | ------------- | ------------- | ------------- |
+| ENG-CES | Marecek et al. 2008 | Gold Alignment | http://ufal.mff.cuni.cz/czech-english-manual-word-alignment |
+| ENG-DEU | EuroParl-based | Gold Alignment | www-i6.informatik.rwth-aachen.de/goldAlignment/ |
+| ENG-FAS | Tvakoli et al. 2014 | Gold Alignment | http://eceold.ut.ac.ir/en/node/940 |
+| ENG-FRA |  WPT2003, Och et al. 2000,| Gold Alignment | http://web.eecs.umich.edu/~mihalcea/wpt/ |
+| ENG-HIN |   WPT2005 | Gold Alignment | http://web.eecs.umich.edu/~mihalcea/wpt05/ |
+| ENG-RON |  WPT2005 Mihalcea et al. 2003 | Gold Alignment | http://web.eecs.umich.edu/~mihalcea/wpt05/ |
+        
+        
+
 Publication
 --------
 
