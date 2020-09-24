@@ -48,7 +48,7 @@ if __name__ == "__main__":
 	parser.add_argument("--null-align", type=float, default=1.0)
 	parser.add_argument("--token-type", type=str, choices=["bpe", "word"], default="bpe")
 	parser.add_argument("--matching-methods", type=str, default="mai", help="m: Max Weight Matching (mwmf), a: argmax (inter), i: itermax, f: forward (fwd), r: reverse (rev)")
-	parser.add_argument("--num-test-sents", type=int, default=None, help="-1 means all sentences")
+	parser.add_argument("--num-test-sents", type=int, default=None, help="None means all sentences")
 	parser.add_argument("-log", action="store_true")
 	parser.add_argument("-device", type=str, default="cpu")
 	parser.add_argument("-output", type=str, default="align_out", help="output alignment files (without extension)")
