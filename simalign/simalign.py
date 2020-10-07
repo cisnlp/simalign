@@ -59,12 +59,16 @@ class EmbeddingLoader(object):
 			else:
 				raise ValueError("The model '{}' is not recognised!".format(model))
 
-	def get_embed_list(self, sent_pair: List[List[str]]) -> torch.Tensor:
+	def get_embed_list(self, sent_batch: List[List[str]]) -> torch.Tensor:
 		if self.emb_model is not None:
-			inputs = self.tokenizer(sent_pair, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
-			outputs = self.emb_model(**inputs)[2][self.layer]
+			with torch.no_grad():
+				if not isinstance(sent_batch[0], str):
+					inputs = self.tokenizer(sent_batch, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
+				else:
+					inputs = self.tokenizer(sent_batch, is_pretokenized=False, padding=True, truncation=True, return_tensors="pt")
+				outputs = self.emb_model(**inputs.to(self.device))[2][self.layer]
 
-			return outputs[:, 1:-1, :]
+				return outputs[:, 1:-1, :]
 		else:
 			return None
 
@@ -108,6 +112,32 @@ class SentenceAligner(object):
 	@staticmethod
 	def get_similarity(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
 		return (cosine_similarity(X, Y) + 1.0) / 2.0
+
+	@staticmethod
+	def average_embeds_over_words(bpe_vectors: np.ndarray, word_tokens_pair: List[List[str]]) -> List[np.array]:
+		w2b_map = []
+		cnt = 0
+		w2b_map.append([])
+		for wlist in word_tokens_pair[0]:
+			w2b_map[0].append([])
+			for x in wlist:
+				w2b_map[0][-1].append(cnt)
+				cnt += 1
+		cnt = 0
+		w2b_map.append([])
+		for wlist in word_tokens_pair[1]:
+			w2b_map[1].append([])
+			for x in wlist:
+				w2b_map[1][-1].append(cnt)
+				cnt += 1
+
+		new_vectors = []
+		for l_id in range(2):
+			w_vector = []
+			for word_set in w2b_map[l_id]:
+				w_vector.append(bpe_vectors[l_id][word_set].mean(0))
+			new_vectors.append(np.array(w_vector))
+		return new_vectors
 
 	@staticmethod
 	def get_alignment_matrix(sim_matrix: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -179,42 +209,25 @@ class SentenceAligner(object):
 				l2_b2w_map += [i for x in wlist]
 
 		vectors = self.embed_loader.get_embed_list([src_sent, trg_sent]).cpu().detach().numpy()
+		vectors = [vectors[i, :len(bpe_lists[i])] for i in [0, 1]]
+
 		if self.token_type == "word":
-			w2b_map = []
-			cnt = 0
-			w2b_map.append([])
-			for wlist in l1_tokens:
-				w2b_map[0].append([])
-				for x in wlist:
-					w2b_map[0][-1].append(cnt)
-					cnt += 1
-			cnt = 0
-			w2b_map.append([])
-			for wlist in l2_tokens:
-				w2b_map[1].append([])
-				for x in wlist:
-					w2b_map[1][-1].append(cnt)
-					cnt += 1
-			new_vectors = []
-			for l_id in range(2):
-				w_vector = []
-				for word_set in w2b_map[l_id]:
-					w_vector.append(vectors[l_id][word_set].mean(0))
-				new_vectors.append(np.array(w_vector))
-			vectors = np.array(new_vectors)
+			vectors = self.average_embeds_over_words(vectors, [l1_tokens, l2_tokens])
 
 		all_mats = {}
-		sim = self.get_similarity(vectors[0, :len(bpe_lists[0])], vectors[1, :len(bpe_lists[1])])
+		sim = self.get_similarity(vectors[0], vectors[1])
 		sim = self.apply_distortion(sim, self.distortion)
 
 		all_mats["fwd"], all_mats["rev"] = self.get_alignment_matrix(sim)
 		all_mats["inter"] = all_mats["fwd"] * all_mats["rev"]
-		all_mats["mwmf"] = self.get_max_weight_match(sim)
-		all_mats["itermax"] = self.iter_max(sim)
+		if "mwmf" in self.matching_methods:
+			all_mats["mwmf"] = self.get_max_weight_match(sim)
+		if "itermax" in self.matching_methods:
+			all_mats["itermax"] = self.iter_max(sim)
 
 		aligns = {x: set() for x in self.matching_methods}
-		for i in range(len(bpe_lists[0])):
-			for j in range(len(bpe_lists[1])):
+		for i in range(len(vectors[0])):
+			for j in range(len(vectors[1])):
 				for ext in self.matching_methods:
 					if all_mats[ext][i, j] > 0:
 						if self.token_type == "bpe":
