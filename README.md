@@ -80,7 +80,7 @@ If you use the code, please cite
 ```
 @article{sabet2020simalign,
   title={SimAlign: High Quality Word Alignments without Parallel Training Data using Static and Contextualized Embeddings},
-  author={Sabet, Masoud Jalili and Dufter, Philipp and Sch{\"u}tze, Hinrich},
+  author={Jalili Sabet, Masoud and Dufter, Philipp and Yvon, François and Sch{\"u}tze, Hinrich},
   journal={arXiv preprint arXiv:2004.08728},
   year={2020}
 }
