@@ -9,13 +9,21 @@ SimAlign: Similarity Based Word Aligner
 
 SimAlign is a high-quality word alignment tool that uses static and contextualized embeddings and **does not require parallel training data**.
 
-For more details see the [Paper](https://arxiv.org/pdf/2004.08728.pdf).
+The following table shows how it compares to popular statistical alignment models:
+
+|            | ENG-CES | ENG-DEU | ENG-FAS | ENG-FRA | ENG-HIN | ENG-RON |
+| ---------- | ------- | ------- | ------- | ------- | ------- | ------- |
+| fast-align | .78     | .71     | .46     | .84     | .38     | .68     |
+| eflomal    | .85     | .77     | .63     | .93     | .52     | .72     |
+| mBERT-Argmax | .87     | .81     | .67     | .94     | .55     | .65     |
+
+Shown is F1, maximum across subword and word level. For more details see the [Paper](https://arxiv.org/pdf/2004.08728.pdf).
 
 
 Installation and Usage
 --------
 
-Tested with Python 3.7, Transformers 2.3.0, Torch 1.5.0. Networkx 2.4 is optional (only required for Match algorithm). 
+Tested with Python 3.7, Transformers 3.1.0, Torch 1.5.0. Networkx 2.4 is optional (only required for Match algorithm). 
 For full list of dependencies see `setup.py`.
 For installation of transformers see [their repo](https://github.com/huggingface/transformers#installation).
 
@@ -44,9 +52,9 @@ for matching_method in alignments:
     print(matching_method, ":", alignments[matching_method])
 
 # Expected output:
-# mwmf : [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
-# inter : [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
-# itermax : [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+# mwmf (Match): [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+# inter (ArgMax): [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
+# itermax (IterMax): [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
 ```
 For more examples of how to use our code see `example/align_example.py`.
 
@@ -82,6 +90,7 @@ If you use the code, please cite
   title={SimAlign: High Quality Word Alignments without Parallel Training Data using Static and Contextualized Embeddings},
   author={Jalili Sabet, Masoud and Dufter, Philipp and Yvon, François and Sch{\"u}tze, Hinrich},
   journal={arXiv preprint arXiv:2004.08728},
+  comment={to appear in Findings of ACL, EMNLP 2020. Presented at SIGTYP2020.}
   year={2020}
 }
 ```
@@ -101,18 +110,22 @@ No, no parallel training data is required.
 
 ##### Which languages can be aligned?
 
-This depends on the underlying pretrained multilingual language model used. For example, if mBERT is used, it covers 104 languages.
+This depends on the underlying pretrained multilingual language model used. For example, if mBERT is used, it covers 104 languages as listed [here](https://github.com/google-research/bert/blob/master/multilingual.md).
 
 ##### Do I need GPUs for running this?
 
 Each alignment simply requires a single forward pass in the pretrained language model. While this is certainly 
-faster on GPU, it runs fine on CPU.
+faster on GPU, it runs fine on CPU. On one GPU (GeForce GTX 1080 Ti) it takes around 15-20 seconds to align 500 parallel sentences.
 
 
 TODOs
 --------
 
-* Add tests
+* Add evaluation code
+* Add static embedding functionality
+* Add wrappers for fast-align, eflomal
+* Add data download scripts 
+
 
 
 License
