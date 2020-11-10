@@ -86,13 +86,19 @@ Publication
 If you use the code, please cite 
 
 ```
-@article{sabet2020simalign,
-  title={SimAlign: High Quality Word Alignments without Parallel Training Data using Static and Contextualized Embeddings},
-  author={Jalili Sabet, Masoud and Dufter, Philipp and Yvon, François and Sch{\"u}tze, Hinrich},
-  journal={arXiv preprint arXiv:2004.08728},
-  comment={to appear in Findings of ACL, EMNLP 2020. Presented at SIGTYP2020.}
-  year={2020}
-}
+@inproceedings{jalili-sabet-etal-2020-simalign,
+    title = "{S}im{A}lign: High Quality Word Alignments without Parallel Training Data using Static and Contextualized Embeddings",
+    author = {Jalili Sabet, Masoud  and
+      Dufter, Philipp  and
+      Yvon, Fran{\c{c}}ois  and
+      Sch{\"u}tze, Hinrich},
+    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: Findings",
+    month = nov,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/2020.findings-emnlp.147",
+    pages = "1627--1643",
 ```
 
 Feedback
