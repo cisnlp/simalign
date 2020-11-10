@@ -99,6 +99,7 @@ If you use the code, please cite
     publisher = "Association for Computational Linguistics",
     url = "https://www.aclweb.org/anthology/2020.findings-emnlp.147",
     pages = "1627--1643",
+}
 ```
 
 Feedback
