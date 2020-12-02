@@ -63,9 +63,9 @@ class EmbeddingLoader(object):
 		if self.emb_model is not None:
 			with torch.no_grad():
 				if not isinstance(sent_batch[0], str):
-					inputs = self.tokenizer(sent_batch, is_pretokenized=True, padding=True, truncation=True, return_tensors="pt")
+					inputs = self.tokenizer(sent_batch, is_split_into_words=True, padding=True, truncation=True, return_tensors="pt")
 				else:
-					inputs = self.tokenizer(sent_batch, is_pretokenized=False, padding=True, truncation=True, return_tensors="pt")
+					inputs = self.tokenizer(sent_batch, is_split_into_words=False, padding=True, truncation=True, return_tensors="pt")
 				outputs = self.emb_model(**inputs.to(self.device))[2][self.layer]
 
 				return outputs[:, 1:-1, :]
