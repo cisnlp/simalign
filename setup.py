@@ -2,13 +2,13 @@ from setuptools import setup
 
 
 setup(name='simalign',
-      version='0.1',
+      version='0.2',
       description='Word Alignments using Pretrained Language Models',
       keywords="NLP deep learning transformer pytorch BERT Word Alignment",
-      url='https://github.com/masoudjs/simalign',
+      url='https://github.com/cisnlp/simalign',
       author='Masoud Jalili Sabet, Philipp Dufter',
       author_email='philipp@cis.lmu.de,masoud@cis.lmu.de',
-      license='GPL-3.0',
+      license='MIT',
       packages=['simalign'],
       install_requires=[
           "numpy",
