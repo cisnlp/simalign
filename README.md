@@ -140,4 +140,4 @@ License
 
 Copyright (C) 2020, Masoud Jalili Sabet, Philipp Dufter
 
-Licensed under the terms of the GNU General Public License, version 3. A full copy of the license can be found in LICENSE.
+A full copy of the license can be found in LICENSE.
