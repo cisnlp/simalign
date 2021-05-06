@@ -7,10 +7,6 @@ import collections
 import numpy as np
 from tqdm import tqdm
 import torch.nn.functional as F
-import os
-import sys
-sys.path.insert(0, os.getcwd())
-sys.path.insert(0, "/mounts/Users/student/masoud/projects/simalign/")
 
 from simalign.simalign import *
 
@@ -84,7 +80,6 @@ if __name__ == "__main__":
 	original_paths = [lang for lang in langs]
 	original_corpora = []
 	for path in original_paths:
-		# corpus = [l.strip().split("\t")[1] for l in codecs.open(path, 'r', 'utf-8').readlines()]
 		corpus = [l.strip() for l in codecs.open(path, 'r', 'utf-8').readlines()]
 		if len(corpus[0].split("\t")) == 2:
 			corpus = [line.split("\t")[1] for line in corpus]
@@ -216,12 +211,12 @@ if __name__ == "__main__":
 					if not args.add_probs:
 						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(raw_aligns[ext])) + "\n")
 					else:
-						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}-{str(round(max(vals), 3))[1:]}" for p, vals in raw_scores[ext].items()])) + "\n")
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}" for p, vals in raw_scores[ext].items()])) + "\n")
 				else:
 					if not args.add_probs:
 						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(b2w_aligns[ext])) + "\n")
 					else:
-						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}-{str(round(max(vals), 3))[1:]}" for p, vals in b2w_scores[ext].items()])) + "\n")
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}" for p, vals in b2w_scores[ext].items()])) + "\n")
 			if args.log:
 				out_log.write(str(sent_id) + "\t" + ' '.join(sorted(log_aligns)) + "\n")
 
