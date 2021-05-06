@@ -3,7 +3,14 @@
 import regex
 import codecs
 import argparse
+import collections
+import numpy as np
+from tqdm import tqdm
 import torch.nn.functional as F
+import os
+import sys
+sys.path.insert(0, os.getcwd())
+sys.path.insert(0, "/mounts/Users/student/masoud/projects/simalign/")
 
 from simalign.simalign import *
 
@@ -56,6 +63,7 @@ if __name__ == "__main__":
 	parser.add_argument("-log", action="store_true")
 	parser.add_argument("-device", type=str, default="cpu")
 	parser.add_argument("-output", type=str, default="align_out", help="output alignment files (without extension)")
+	parser.add_argument("--add-probs", action="store_true")
 	args = parser.parse_args()
 
 	if args.model == "bert":
@@ -76,7 +84,10 @@ if __name__ == "__main__":
 	original_paths = [lang for lang in langs]
 	original_corpora = []
 	for path in original_paths:
-		corpus = [l.strip().split("\t")[1] for l in codecs.open(path, 'r', 'utf-8').readlines()]
+		# corpus = [l.strip().split("\t")[1] for l in codecs.open(path, 'r', 'utf-8').readlines()]
+		corpus = [l.strip() for l in codecs.open(path, 'r', 'utf-8').readlines()]
+		if len(corpus[0].split("\t")) == 2:
+			corpus = [line.split("\t")[1] for line in corpus]
 		corpus = [regex.sub("\\p{C}+", "", regex.sub("\\p{Separator}+", " ", l)).strip() for l in corpus]
 		original_corpora.append(corpus[:max_sent_id])
 
@@ -135,7 +146,7 @@ if __name__ == "__main__":
 
 	ds = [(idx, original_corpora[0][idx], original_corpora[1][idx]) for idx in range(len(original_corpora[0]))]
 	data_loader = torch.utils.data.DataLoader(ds, batch_size=args.batch_size, shuffle=False)
-	for batch_id, batch_sentences in enumerate(data_loader):
+	for batch_id, batch_sentences in enumerate(tqdm(data_loader)):
 		batch_vectors_src = embed_loader.get_embed_list(batch_sentences[1])
 		batch_vectors_trg = embed_loader.get_embed_list(batch_sentences[2])
 		btach_sim = None
@@ -182,6 +193,8 @@ if __name__ == "__main__":
 
 			raw_aligns = {x: [] for x in matching_methods}
 			b2w_aligns = {x: set() for x in matching_methods}
+			raw_scores = {x: collections.defaultdict(lambda: []) for x in matching_methods}
+			b2w_scores = {x: collections.defaultdict(lambda: []) for x in matching_methods}
 			log_aligns = []
 
 			for i in range(len(vectors[0])):
@@ -189,8 +202,10 @@ if __name__ == "__main__":
 					for ext in matching_methods:
 						if all_mats[ext][i, j] > 0:
 							raw_aligns[ext].append('{}-{}'.format(i, j))
+							raw_scores[ext]['{}-{}'.format(i, j)].append(sim[i, j])
 							if args.token_type == "bpe":
 								b2w_aligns[ext].add('{}-{}'.format(sentences_b2w_map[sent_id][0][i], sentences_b2w_map[sent_id][1][j]))
+								b2w_scores[ext]['{}-{}'.format(sentences_b2w_map[sent_id][0][i], sentences_b2w_map[sent_id][1][j])].append(sim[i, j])
 								if ext == "inter":
 									log_aligns.append('{}-{}:({}, {})'.format(i, j, sent_pair[0][i], sent_pair[1][j]))
 							else:
@@ -198,9 +213,15 @@ if __name__ == "__main__":
 
 			for ext in out_f:
 				if convert_to_words:
-					out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(raw_aligns[ext])) + "\n")
+					if not args.add_probs:
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(raw_aligns[ext])) + "\n")
+					else:
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}-{str(round(max(vals), 3))[1:]}" for p, vals in raw_scores[ext].items()])) + "\n")
 				else:
-					out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(b2w_aligns[ext])) + "\n")
+					if not args.add_probs:
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted(b2w_aligns[ext])) + "\n")
+					else:
+						out_f[ext].write(str(sent_id) + "\t" + ' '.join(sorted([F"{p}-{str(round(np.mean(vals), 3))[1:]}-{str(round(max(vals), 3))[1:]}" for p, vals in b2w_scores[ext].items()])) + "\n")
 			if args.log:
 				out_log.write(str(sent_id) + "\t" + ' '.join(sorted(log_aligns)) + "\n")
 
