@@ -56,7 +56,7 @@ for matching_method in alignments:
 # inter (ArgMax): [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
 # itermax (IterMax): [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4)]
 ```
-For more examples of how to use our code see `example/align_example.py`.
+For more examples of how to use our code see `scripts/align_example.py`.
 
 Demo
 --------
@@ -79,6 +79,14 @@ Links to the gold standars used in the paper are here:
 | ENG-RON |  WPT2005 Mihalcea et al. 2003 | Gold Alignment | http://web.eecs.umich.edu/~mihalcea/wpt05/ |
         
         
+Evaluation Script
+--------
+For evaluating the output alignments use `scripts/calc_align_score.py`.
+
+The gold alignment file should have the same format as SimAlign outputs.
+Sure alignment edges in the gold standard have a '-' between the source and the target indices and the possible edges have a 'p' between indices.
+For sample parallel sentences and their gold alignments from ENG-DEU, see `samples`.
+
 
 Publication
 --------
@@ -128,7 +136,6 @@ faster on GPU, it runs fine on CPU. On one GPU (GeForce GTX 1080 Ti) it takes ar
 TODOs
 --------
 
-* Add evaluation code
 * Add static embedding functionality
 * Add wrappers for fast-align, eflomal
 * Add data download scripts 
