@@ -27,7 +27,11 @@ Tested with Python 3.7, Transformers 3.1.0, Torch 1.5.0. Networkx 2.4 is optiona
 For full list of dependencies see `setup.py`.
 For installation of transformers see [their repo](https://github.com/huggingface/transformers#installation).
 
-Download the repo for use or alternatively install with pip
+Download the repo for use or alternatively install with PyPi
+
+`pip install simalign`
+
+or directly with pip from GitHub
 
 `pip install --upgrade git+https://github.com/cisnlp/simalign.git#egg=simalign`
 
