@@ -133,14 +133,6 @@ Each alignment simply requires a single forward pass in the pretrained language 
 faster on GPU, it runs fine on CPU. On one GPU (GeForce GTX 1080 Ti) it takes around 15-20 seconds to align 500 parallel sentences.
 
 
-TODOs
---------
-
-* Add static embedding functionality
-* Add wrappers for fast-align, eflomal
-* Add data download scripts 
-
-
 
 License
 -------
