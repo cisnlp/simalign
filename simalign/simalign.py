@@ -46,18 +46,14 @@ class EmbeddingLoader(object):
 			self.emb_model.eval()
 			self.emb_model.to(self.device)
 			self.tokenizer = tokenizer_class.from_pretrained(model)
-			LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 		else:
-			if os.path.isdir(model):
-				# try to load model with auto-classes
-				config = AutoConfig.from_pretrained(model, output_hidden_states=True)
-				self.emb_model = AutoModel.from_pretrained(model, config=config)
-				self.emb_model.eval()
-				self.emb_model.to(self.device)
-				self.tokenizer = AutoTokenizer.from_pretrained(model)
-				LOG.info("Initialized the EmbeddingLoader from path: {}".format(self.model))
-			else:
-				raise ValueError("The model '{}' is not recognised!".format(model))
+			# try to load model with auto-classes
+			config = AutoConfig.from_pretrained(model, output_hidden_states=True)
+			self.emb_model = AutoModel.from_pretrained(model, config=config)
+			self.emb_model.eval()
+			self.emb_model.to(self.device)
+			self.tokenizer = AutoTokenizer.from_pretrained(model)
+		LOG.info("Initialized the EmbeddingLoader with model: {}".format(self.model))
 
 	def get_embed_list(self, sent_batch: List[List[str]]) -> torch.Tensor:
 		if self.emb_model is not None:
@@ -66,8 +62,10 @@ class EmbeddingLoader(object):
 					inputs = self.tokenizer(sent_batch, is_split_into_words=True, padding=True, truncation=True, return_tensors="pt")
 				else:
 					inputs = self.tokenizer(sent_batch, is_split_into_words=False, padding=True, truncation=True, return_tensors="pt")
-				outputs = self.emb_model(**inputs.to(self.device))[2][self.layer]
-
+				hidden = self.emb_model(**inputs.to(self.device))["hidden_states"]
+				if self.layer >= len(hidden):
+					raise ValueError(f"Specified to take embeddings from layer {self.layer}, but model has only {len(hidden)} layers.")
+				outputs = hidden[self.layer]
 				return outputs[:, 1:-1, :]
 		else:
 			return None
