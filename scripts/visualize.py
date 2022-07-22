@@ -33,7 +33,8 @@ def plot_alignments(e: List[Text],
                     alignment1: np.ndarray,
                     alignment2: np.ndarray = None,
                     title: Text = None,
-                    filename: Text = None):
+                    filename: Text = None,
+                    dpi: int = 150):
     shorter = min(len(e), len(f))
     scalefactor = min((4 / shorter), 1)
 
@@ -85,7 +86,7 @@ def plot_alignments(e: List[Text],
         ax.set_title(title)
     fig.tight_layout()
     if filename:
-        plt.savefig(filename)
+        plt.savefig(filename, dpi=dpi)
     else:
         plt.show()
 
