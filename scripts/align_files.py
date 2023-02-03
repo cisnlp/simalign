@@ -60,6 +60,7 @@ if __name__ == "__main__":
 	parser.add_argument("-device", type=str, default="cpu")
 	parser.add_argument("-output", type=str, default="align_out", help="output alignment files (without extension)")
 	parser.add_argument("--add-probs", action="store_true")
+	parser.add_argument("--layer", type=int, default=8, help="The layer the embeddings should be taken from.")
 	args = parser.parse_args()
 
 	if args.model == "bert":
@@ -75,7 +76,8 @@ if __name__ == "__main__":
 	device = torch.device(args.device)
 
 	# --------------------------------------------------------
-	embed_loader = EmbeddingLoader(model=args.model, device=device)
+	embed_loader = EmbeddingLoader(model=args.model, device=device, 
+		layer=args.layer)
 
 	original_paths = [lang for lang in langs]
 	original_corpora = []
